@@ -1,0 +1,10 @@
+{
+  "Name": "Farmer Speak",
+  "Author": "Prism 99",
+  "Version": "1.0.0",
+  "Description": "A utility that allows the Farmer to think and speak.",
+  "UniqueID": "prism99.FarmerSpeak",
+  "EntryDll": "SDV_Speaker.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}

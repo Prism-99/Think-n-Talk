@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31613.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SDV_Speaker", "SDV_Speaker.csproj", "{BEA4B0C5-DED1-4774-A4D2-D6716FCDFF62}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BEA4B0C5-DED1-4774-A4D2-D6716FCDFF62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEA4B0C5-DED1-4774-A4D2-D6716FCDFF62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEA4B0C5-DED1-4774-A4D2-D6716FCDFF62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEA4B0C5-DED1-4774-A4D2-D6716FCDFF62}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5FED502D-CC1C-4788-9F21-7A033F351811}
+	EndGlobalSection
+EndGlobal
