@@ -1,4 +1,4 @@
-# SDV_Speaker
+# Stardew Valley Speaker
 Allows the Stardew Valley Farmer to talk
 
 Used from the chat window:
