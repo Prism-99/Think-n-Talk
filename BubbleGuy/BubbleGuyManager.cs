@@ -29,7 +29,14 @@ namespace SDV_Speaker.Speaker
             oMonitor = monitor;
             Recorder = new BubbleRecorder(sSavePath, oHelper);
             sSpirteDirectory = sSpriteDir;
+            helper.Events.GameLoop.Saving += GameLoop_Saving;
         }
+
+        private void GameLoop_Saving(object sender, SavingEventArgs e)
+        {
+            RemoveBubbleGuy(false);
+        }
+
         public void AddBubbleGuy(bool isThink, string sText)
         {
             RemoveBubbleGuy(false);
