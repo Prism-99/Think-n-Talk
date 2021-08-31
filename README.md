@@ -1,4 +1,4 @@
-# Stardew Valley Speaker
+# Stardew Valley Think-n-Talk
 Allows the Stardew Valley Farmer to talk
 
 Used from the chat window:
