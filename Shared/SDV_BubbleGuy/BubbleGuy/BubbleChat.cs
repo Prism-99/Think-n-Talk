@@ -33,7 +33,7 @@ namespace SDV_Speaker.Speaker
                 case "talk":
                     bShowBubble = true;
                     break;
-                case "sb":
+                case "clear":
                     oManager.RemoveBubbleGuy(false,false);
                     return false;
                 default:
@@ -41,9 +41,16 @@ namespace SDV_Speaker.Speaker
             }
             if (bShowBubble)
             {
-                sText = command.Substring(arParts[0].Length + 1);
-                sText = _sdk.FilterDirtyWords(sText);
-                oManager.AddBubbleGuy(bIsThink, sText);
+                if (command.Replace("think", "").Trim() == "" || command.Replace("talk", "").Trim() == "")
+                {
+                    oManager.RemoveBubbleGuy(false, false);
+                }
+                else
+                {
+                    sText = command.Substring(arParts[0].Length + 1);
+                    sText = _sdk.FilterDirtyWords(sText);
+                    oManager.AddBubbleGuy(bIsThink, sText);
+                }
                 return false;
             }
             else
