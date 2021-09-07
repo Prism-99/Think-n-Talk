@@ -96,7 +96,6 @@
     <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleGuyManager.cs" />
     <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleGuyStatics.cs" />
     <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleRecorder.cs" />
-    <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\FarmerTalk.cs" />
     <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\SpeakerItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shared\SDV_StardewBitmap\StardewBitmap.cs" />
