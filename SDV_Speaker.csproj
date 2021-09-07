@@ -12,6 +12,7 @@
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -90,15 +91,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BubbleGuy\BubbleChat.cs" />
-    <Compile Include="BubbleGuy\BubbleGuy.cs" />
-    <Compile Include="BubbleGuy\BubbleGuyManager.cs" />
-    <Compile Include="BubbleGuy\BubbleRecorder.cs" />
-    <Compile Include="BubbleGuy\FarmerTalk.cs" />
-    <Compile Include="BubbleGuy\SpeakerItem.cs" />
+    <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleChat.cs" />
+    <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleGuy.cs" />
+    <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleGuyManager.cs" />
+    <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleGuyStatics.cs" />
+    <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleRecorder.cs" />
+    <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\FarmerTalk.cs" />
+    <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\SpeakerItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shared\SDV_StardewBitmap\StardewBitmap.cs" />
-    <Compile Include="SMAPI\ModEntry.cs" />
+    <Compile Include="Shared\SDV_StardewBitmap\StardewTextureLoader.cs" />
+    <Compile Include="Shared\SDV_BubbleGuy\SMAPI\ModEntry.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Sprites\talk_bubble.png">

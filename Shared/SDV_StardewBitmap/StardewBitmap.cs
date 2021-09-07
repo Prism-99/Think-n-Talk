@@ -1,36 +1,50 @@
 ﻿
 
 
-#if Classic
+#if Classic||Common
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+#endif
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
-using System.Runtime.InteropServices;
-#endif
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using System.IO;
 #if SKIA
 using SkiaSharp;
 #endif
-
+using StardewModdingAPI;
+using xColor = Microsoft.Xna.Framework.Color;
 
 namespace StardewModHelpers
 {
+    public class Size
+    {
+        public Size() { }
+        public Size(int iWidth, int iHeight)
+        {
+            Width = iWidth;
+            Height = iHeight;
+        }
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
 #if SKIA
     public class StardewBitmap
     {
         private SKBitmap SourceImage = null;
+        private static IModHelper oHelper;
 
     #region "Constructors"
         public StardewBitmap()
         {
 
+        }
+        public StardewBitmap(string sFilename)
+        {
+            SourceImage = SKBitmap.Decode(sFilename);
         }
         public StardewBitmap(Texture2D texture)
         {
@@ -50,9 +64,13 @@ namespace StardewModHelpers
         public StardewBitmap(MemoryStream ms)
         {
             SourceImage = SKBitmap.Decode(ms);
-
         }
     #endregion
+
+        public static StardewBitmap LoadFromContent(string sContentPath)
+        {
+            return StardewTextureLoader.LoadImageInUIThread(sContentPath);
+        }
 
     #region "public properties"
         public int Height { get { return SourceImage.Height; } }
@@ -60,29 +78,113 @@ namespace StardewModHelpers
     #endregion
 
     #region "public methods"
+        public void DrawRectangle(xColor cLine, int iLeft, int iTop, int iWidth, int iHeight)
+        {
+            var canvas = new SKCanvas(SourceImage);
+            var rect = SKRect.Create(iLeft, iTop, iWidth, iHeight);
+            var paint = new SKPaint
+            {
+                Style = SKPaintStyle.Stroke,
+                Color = xColorToNative(cLine)
+            };
+
+            canvas.DrawRect(rect, paint);
+
+            canvas.Flush();
+        }
+        public void Save(string sFilename)
+        {
+            using (var image = SKImage.FromBitmap(SourceImage))
+            using (var data = image.Encode(SKEncodedImageFormat.Png, 80))
+            {
+                // save the data to a stream
+                using (var stream = File.OpenWrite(sFilename))
+                {
+                    data.SaveTo(stream);
+                }
+            }
+        }
+        public void FillRectangle(xColor cFill, int iLeft, int iTop, int iWidth, int iHeight)
+        {
+  
+            var canvas = new SKCanvas(SourceImage);
+            // the rectangle
+            var rect = SKRect.Create(iLeft, iTop, iWidth, iHeight);
+
+            // the brush
+            var paint = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                Color = xColorToNative(cFill)
+            };
+
+            // draw fill
+            canvas.DrawRect(rect, paint);
+
+            canvas.Flush();
+        }
+        public StardewBitmap GetBoundedImage(Rectangle rBounds)
+        {
+
+            StardewBitmap imPort = new StardewBitmap(rBounds.Width, rBounds.Height);
+            imPort.DrawImage(this, new Rectangle(0, 0, rBounds.Width, rBounds.Height), rBounds);
+
+            return imPort;
+        }
+        public StardewBitmap GetBoundedImage(int iWidth, int iHeight, int iImageIndex)
+        {
+            int iRow = 0;
+            int iCol = 0;
+
+            int iCols = SourceImage.Width / iWidth;
+
+            if (iImageIndex > -1)
+            {
+                iRow = iImageIndex / iCols;
+                iCol = iImageIndex % iCols;
+            }
+
+            StardewBitmap imPort = new StardewBitmap(iWidth, iHeight);
+            imPort.DrawImage(this, new Rectangle(0, 0, iWidth, iHeight), new Rectangle(iWidth * iCol, iRow * iHeight, iWidth, iHeight));
+
+            return imPort;
+        }
         public Texture2D Texture()
         {
             return Texture2D.FromStream(Game1.graphics.GraphicsDevice, SourceStream());
         }
 
-        public void DrawImage(StardewBitmap image, Rectangle source, Rectangle destination)
+        public void DrawImage(StardewBitmap image, Rectangle destination, Rectangle source)
         {
+#if TRACE
+            StardewLogger.DumpObject("drawimage image", image);
+            StardewLogger.DumpObject("drawimage SourceImage", SourceImage);
+            StardewLogger.DumpObject("  d rectange", destination);
+            StardewLogger.DumpObject("  d skrectange", ConvertxRect( destination));
+            StardewLogger.DumpObject("  s rectange", source);
+            StardewLogger.DumpObject("  s krectange", ConvertxRect(source));
+
+#endif
             var canvas = new SKCanvas(SourceImage);
 
-            canvas.DrawBitmap(StardewToSK(image), ConvertxRect(source), ConvertxRect(destination));
+            canvas.DrawBitmap(image.SourceImage, ConvertxRect(source), ConvertxRect(destination));
             canvas.Flush();
-
+            canvas.Save();
         }
         public void DrawString(string text, int x, int y)
         {
+            DrawString(text, "Arial", 64.0f, new xColor(255, 255, 255, 255), x, y);
+        }
+        public void DrawString(string text, string sFontName, float fFontSize, xColor cFontColor, int x, int y)
+        {
             var canvas = new SKCanvas(SourceImage);
-            var font = SKTypeface.FromFamilyName("Arial");
+            var font = SKTypeface.FromFamilyName(sFontName);
             var brush = new SKPaint
             {
                 Typeface = font,
-                TextSize = 64.0f,
+                TextSize = fFontSize,
                 IsAntialias = false,
-                Color = new SKColor(255, 255, 255, 255)
+                Color = xColorToNative(cFontColor)
             };
             canvas.DrawText(text, x, y, brush);
         }
@@ -92,16 +194,25 @@ namespace StardewModHelpers
             SKData encoded = image.Encode();
             var memoryStream = new MemoryStream();
             encoded.AsStream().CopyTo(memoryStream);
+            memoryStream.Seek(0, SeekOrigin.Begin);
             return memoryStream;
         }
 
+        public void ResizeImage(int width, int height)
+        {
+            SourceImage = SourceImage.Resize(new SKImageInfo(width, height), SKFilterQuality.Medium);
+        }
     #endregion
 
     #region "private methods"
 
+        private SKColor xColorToNative(xColor cColor)
+        {
+            return new SKColor(cColor.R, cColor.G, cColor.B);
+        }
         private SKRect ConvertxRect(Rectangle rect)
         {
-            return new SKRect(rect.X, rect.Y, rect.Width, rect.Height);
+            return new SKRect(rect.Left, rect.Top, rect.Left + rect.Width, rect.Top + rect.Height);
         }
 
         private SKBitmap StardewToNative(StardewBitmap source)
@@ -163,18 +274,25 @@ namespace StardewModHelpers
         #endregion
 
         #region "public methods"
+        public static StardewBitmap LoadFromContent(string sContentPath)
+        {
+            return StardewTextureLoader.LoadImageInUIThread(sContentPath);
+        }
         public Texture2D Texture()
         {
             if (txOutput == null)
             {
-                txOutput= Texture2D.FromStream(Game1.graphics.GraphicsDevice, SourceStream());
+                txOutput = Texture2D.FromStream(Game1.graphics.GraphicsDevice, SourceStream());
             }
             return txOutput;
         }
 
-        public void DrawImage(StardewBitmap image, Rectangle source, Rectangle destination)
+        public void DrawImage(StardewBitmap image, Rectangle destination, Rectangle source)
         {
-            //Image iTileSheet = new Bitmap(ImageHelpers.GetTextureStream(Game1.bigCraftableSpriteSheet));
+#if TRACE
+            StardewLogger.DumpObject("source rect", source);
+            StardewLogger.DumpObject("dest rect", destination);
+#endif
             ImageAttributes iAttr = new ImageAttributes();
             using (Graphics gr = Graphics.FromImage(SourceImage))
             {
@@ -182,16 +300,30 @@ namespace StardewModHelpers
                 gr.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
                 gr.DrawImage(image.SourceImage, GetSysRectangle(destination), GetSysRectangle(source), GraphicsUnit.Pixel);
             }
-            //txSign = ImageHelpers.LoadTextureFromImage(imSign);
+        }
+        public void DrawString(string text, int x, int y)
+        {
+            DrawString(text, "Verdana", 16.0f, xColor.Black, x, y, 0, 0);
         }
         public void DrawString(string text, int x, int y, int width, int height)
         {
-            Font fText = new Font("Verdana", 16, FontStyle.Bold);
+            DrawString(text, "Verdana", 16.0f, xColor.Black, x, y, width, height);
+        }
+        public void DrawString(string text, string sFontName, float fFontSize, xColor cTextColor, int x, int y, int width, int height)
+        {
+            Font fText = new Font(sFontName, fFontSize, FontStyle.Bold);
             using (Graphics gr = Graphics.FromImage(SourceImage))
             {
                 SizeF szStrring = gr.MeasureString(text, fText);
-                StringFormat sf = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Near };
-                gr.DrawString(text, fText, Brushes.Black, new System.Drawing.Rectangle(x, y, width, height), sf);
+                if (width == 0)
+                {
+                    gr.DrawString(text, fText, new SolidBrush(GetSysColor(cTextColor)), x, y);
+                }
+                else
+                {
+                    StringFormat sf = new StringFormat { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Near };
+                    gr.DrawString(text, fText, new SolidBrush(GetSysColor(cTextColor)), new System.Drawing.Rectangle(x, y, width, height), sf);
+                }
             }
         }
         public MemoryStream SourceStream()
@@ -200,15 +332,59 @@ namespace StardewModHelpers
             SourceImage.Save(memoryStream, ImageFormat.Png);
             return memoryStream;
         }
+        public StardewBitmap GetBoundedImage(Rectangle rBounds)
+        {
+            StardewBitmap imPort = new StardewBitmap(rBounds.Width, rBounds.Height);
+            imPort.DrawImage(this, new Rectangle(0, 0, rBounds.Width, rBounds.Height), rBounds);
+
+            return imPort;
+        }
+        public void FillRectangle(xColor cFill, int iLeft, int iTop, int iWidth, int iHeight)
+        {
+            using (Graphics gr = Graphics.FromImage(SourceImage))
+            {
+                gr.FillRectangle(new SolidBrush(GetSysColor(cFill)), new System.Drawing.Rectangle(iLeft, iTop, iWidth, iHeight));
+            }
+        }
+        public void DrawRectangle(xColor cLine, int iLeft, int iTop, int iWidth, int iHeight)
+        {
+            using (Graphics gr = Graphics.FromImage(SourceImage))
+            {
+                gr.DrawRectangle(new Pen(new SolidBrush(GetSysColor(cLine)), 1), iLeft, iTop, iWidth, iHeight);
+            }
+        }
+        public StardewBitmap GetBoundedImage(int iWidth, int iHeight, int iImageIndex)
+        {
+
+            int iRow = 0;
+            int iCol = 0;
+
+            int iCols = SourceImage.Width / iWidth;
+
+            if (iImageIndex > -1)
+            {
+                iRow = iImageIndex / iCols;
+                iCol = iImageIndex % iCols;
+            }
+
+            StardewBitmap imPort = new StardewBitmap(iWidth, iHeight);
+            imPort.DrawImage(this, new Rectangle(0, 0, iWidth, iHeight), new Rectangle(iWidth * iCol, iRow * iHeight, iWidth, iHeight));
+
+            return imPort;
+        }
         public void ResizeImage(int width, int height)
         {
             Image imNew = new Bitmap(SourceImage, width, height);
             SourceImage = new Bitmap(imNew);
         }
+        public void Save(string sFilename)
+        {
+            SourceImage.Save(sFilename);
+        }
         #endregion
 
         #region "private methods"
-        private  MemoryStream GetTextureStream(Texture2D tTexture)
+        private MemoryStream GetTextureStream(Texture2D tTexture)
         {
             MemoryStream stream = new MemoryStream();
 
@@ -237,7 +413,10 @@ namespace StardewModHelpers
 
             return stream;
         }
-
+        private Color GetSysColor(xColor cXNA)
+        {
+            return Color.FromArgb(cXNA.R, cXNA.G, cXNA.B);
+        }
         private System.Drawing.Rectangle GetSysRectangle(Rectangle rXNA)
         {
             return new System.Drawing.Rectangle(rXNA.X, rXNA.Y, rXNA.Width, rXNA.Height);
@@ -262,21 +441,15 @@ namespace StardewModHelpers
         private static Image GetImage(string sFilename)
         {
             Bitmap originalBmp = new Bitmap(Image.FromFile(sFilename));
-
-            // Create a blank bitmap with the same dimensions
             Bitmap tempBitmap = new Bitmap(originalBmp.Width, originalBmp.Height);
 
-            // From this bitmap, the graphics can be obtained, because it has the right PixelFormat
             using (Graphics g = Graphics.FromImage(tempBitmap))
             {
-                // Draw the original bitmap onto the graphics of the new bitmap
                 g.DrawImage(originalBmp, 0, 0);
             }
 
-            // Use tempBitmap as you would have used originalBmp
             return tempBitmap;
         }
-
 
         #endregion
     }

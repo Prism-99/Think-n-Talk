@@ -19,9 +19,8 @@ namespace SDV_Speaker.Speaker
         public List<SpeakerItem> CurrentRecording;
         public Dictionary<string, List<SpeakerItem>> Recordings;
         public string DataDirectory;
-        public RecorderStatus Status;
         private readonly IModHelper oHelper;
-        public BubbleRecorder(string sDir,IModHelper helper)
+        public BubbleRecorder(string sDir, IModHelper helper)
         {
             oHelper = helper;
             DataDirectory = sDir;
@@ -29,6 +28,7 @@ namespace SDV_Speaker.Speaker
             Recordings = new Dictionary<string, List<SpeakerItem>> { };
             Status = RecorderStatus.Stopped;
         }
+        public RecorderStatus Status { get; private set; }
         public void Play()
         {
             Status = RecorderStatus.Playing;
@@ -56,7 +56,17 @@ namespace SDV_Speaker.Speaker
                 }
             }
         }
-
+        public void UpdateItemInCurrentRecording(SpeakerItem oOldValue,SpeakerItem oNewVal)
+        {
+            for(int iPtr = 0; iPtr < CurrentRecording.Count; iPtr++)
+            {
+                if (CurrentRecording[iPtr].Equals(oOldValue))
+                {
+                    CurrentRecording[iPtr] = oNewVal;
+                    break;
+                }
+            }
+        }
         public bool SaveRecording(string sRecordingName)
         {
             if (Recordings.ContainsKey(sRecordingName))

@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using StardewValley.Menus;
 using SDV_Speaker.Speaker;
 using System.IO;
 
 #if Classic
 using Harmony;
+#elif Current
+using HarmonyLib;
 #endif
-namespace SDV_Speaker.SMAPI
+namespace SDV_Speaker.SMAPIInt
 {
 
 
@@ -26,6 +25,8 @@ namespace SDV_Speaker.SMAPI
             oHelper = helper;
             oManager = new BubbleGuyManager(Path.Combine(helper.DirectoryPath, "saves"), Path.Combine(helper.DirectoryPath,"sprites") , helper,Monitor);
             BubbleChat.Initialize(oManager);
+            helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
+
 #if Current
                 Harmony harmony = new Harmony(ModManifest.UniqueID);
 #elif Classic
@@ -38,5 +39,12 @@ namespace SDV_Speaker.SMAPI
             Monitor.Log($"Harmony patch applied", LogLevel.Info);
 
         }
+        private void GameLoop_SaveLoaded(object sender, SaveLoadedEventArgs e)
+        {
+           
+            BubbleGuyStatics.Initialize(Path.Combine(oHelper.DirectoryPath, "Sprites"));
+            Monitor.Log($"BubbleGuy name: '{BubbleGuyStatics.BubbleGuyName}'", LogLevel.Info);
+        }
     }
+   
 }

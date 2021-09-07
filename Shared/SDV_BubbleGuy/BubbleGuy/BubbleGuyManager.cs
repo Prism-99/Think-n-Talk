@@ -1,11 +1,11 @@
-﻿using System;
+﻿
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using StardewValley;
 using StardewModdingAPI.Events;
 using StardewModdingAPI;
+using System.Linq;
+
+//using StardewWeb.Utilities;
 
 namespace SDV_Speaker.Speaker
 {
@@ -23,34 +23,68 @@ namespace SDV_Speaker.Speaker
         public List<SpeakerItem> CurrentRecording => Recorder.CurrentRecording;
         public Dictionary<string, List<SpeakerItem>> Recordings => Recorder.Recordings;
 
-        public BubbleGuyManager(string sSavePath, string sSpriteDir, IModHelper helper,IMonitor monitor)
+
+        public BubbleGuyManager(string sSavePath, string sSpriteDir, IModHelper helper, IMonitor monitor)
         {
             oHelper = helper;
             oMonitor = monitor;
             Recorder = new BubbleRecorder(sSavePath, oHelper);
             sSpirteDirectory = sSpriteDir;
-            helper.Events.GameLoop.Saving += GameLoop_Saving;
+            if (Game1.IsMasterGame)
+            {
+                helper.Events.GameLoop.Saving += GameLoop_Saving;
+            }
+            helper.Events.Player.Warped += Player_Warped;
         }
+
+
 
         private void GameLoop_Saving(object sender, SavingEventArgs e)
         {
-            RemoveBubbleGuy(false);
+            RemoveBubbleGuy(false, true);
         }
 
         public void AddBubbleGuy(bool isThink, string sText)
         {
-            RemoveBubbleGuy(false);
+            RemoveBubbleGuy(false, false);
             Game1.currentLocation.characters.Add(new BubbleGuy(isThink, sText, sSpirteDirectory));
             IsBubbleVisible = true;
         }
-        public void RemoveBubbleGuy(bool bAllLocations)
+        public void RemoveBubbleGuy(bool bAllLocations, bool bIsSave)
         {
+#if DEBUG
+            oMonitor.Log($"removing BubbleGuy. name '{BubbleGuyStatics.BubbleGuyName}'", LogLevel.Info);
+#endif
             if (bAllLocations) { }
             else
             {
-                if (Game1.currentLocation.getCharacterFromName("BubbleGuy") is BubbleGuy oGuy)
+                if (Game1.IsMultiplayer && Game1.IsMasterGame && bIsSave)
                 {
-                    Game1.currentLocation.characters.Remove(oGuy);
+                    foreach (GameLocation gl in Game1.locations)
+                    {
+                        List<NPC> lDelete = new List<NPC> { };
+                        foreach (NPC oNpc in gl.characters)
+                        {
+                            if (oNpc.name.Value.StartsWith(BubbleGuyStatics.BubbleGuyPrefix))
+                            {
+                                lDelete.Add(oNpc);
+                            }
+                        }
+                        foreach (NPC oDel in lDelete)
+                        {
+                            gl.characters.Remove(oDel);
+                        }
+                    }
+                }
+                else
+                {
+#if DEBUG
+                    oMonitor.Log($"Characters: {string.Join(", ", Game1.currentLocation.characters.Select(p => p.name))}",LogLevel.Info);
+#endif
+                    if (Game1.currentLocation.getCharacterFromName(BubbleGuyStatics.BubbleGuyName) is NPC oGuy)
+                    {
+                        Game1.currentLocation.characters.Remove(oGuy);
+                    }
                 }
             }
             IsBubbleVisible = false;
@@ -86,14 +120,42 @@ namespace SDV_Speaker.Speaker
             oHelper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked;
             Recorder.Play();
         }
+        public void Record()
+        {
+            Recorder.Record();
+        }
+
         public void Stop()
         {
             if (Recorder.Status == BubbleRecorder.RecorderStatus.Playing)
             {
                 oHelper.Events.GameLoop.UpdateTicked -= GameLoop_UpdateTicked;
             }
-
+            Recorder.Stop();
         }
+        public void DeleteRecordingItem(SpeakerItem oDelete)
+        {
+            Recorder.DeleteItemFromCurrentRecording(oDelete);
+        }
+        public void UpdateItemInCurrentRecording(SpeakerItem oOldValue, SpeakerItem oNewVal)
+        {
+            Recorder.UpdateItemInCurrentRecording(oOldValue, oNewVal);
+        }
+        private void Player_Warped(object sender, WarpedEventArgs e)
+        {
+
+            if (e.OldLocation.getCharacterFromName(BubbleGuyStatics.BubbleGuyName) != null)
+            {
+                NPC oOld = e.OldLocation.getCharacterFromName(BubbleGuyStatics.BubbleGuyName);
+                e.OldLocation.characters.Remove(oOld);
+                if (e.NewLocation.getCharacterFromName(BubbleGuyStatics.BubbleGuyName) == null)
+                {
+                    e.NewLocation.characters.Add(oOld);
+                }
+            }
+        }
+
+
         private void GameLoop_UpdateTicked(object sender, UpdateTickedEventArgs e)
         {
             if (string.IsNullOrEmpty(sRecordingLastLocation) || sRecordingLastLocation != Game1.currentLocation.name.Value
@@ -107,8 +169,9 @@ namespace SDV_Speaker.Speaker
                 {
                     if (!oItem.MarkHit && oItem.Location == sRecordingLastLocation && oItem.TileX == iRecordingLastX && oItem.TileY == iRecordingLastY)
                     {
-                        RemoveBubbleGuy(false);
-                        if (!oItem.IsClear)
+                        RemoveBubbleGuy(false, false);
+
+                        if (!oItem.IsClear && oItem.Text != null)
                         {
                             Game1.currentLocation.characters.Add(new BubbleGuy(oItem.IsThink, oItem.Text, sSpirteDirectory));
                         }

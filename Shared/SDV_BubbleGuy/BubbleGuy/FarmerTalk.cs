@@ -1,10 +1,8 @@
-﻿using System;
-
-
-#if Classic
+﻿
+using System;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
-#endif
+
 
 using StardewValley;
 

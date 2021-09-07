@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 using StardewValley.SDKs;
 using StardewModdingAPI;
 
 namespace SDV_Speaker.Speaker
 {
-   
+
     internal static class BubbleChat
     {
         private static BubbleGuyManager oManager;
@@ -17,12 +13,12 @@ namespace SDV_Speaker.Speaker
         public static void Initialize(BubbleGuyManager manager)
         {
             oManager = manager;
-            _sdk =  new SteamHelper();
+            _sdk = new SteamHelper();
         }
         public static bool RunCommand(string command)
         {
             string sText = "";
-             string[] arParts = command.Split(' ');
+            string[] arParts = command.Split(' ');
             bool bShowBubble = false;
             bool bIsThink = false;
 #if DEBUG
@@ -38,7 +34,7 @@ namespace SDV_Speaker.Speaker
                     bShowBubble = true;
                     break;
                 case "sb":
-                    oManager.RemoveBubbleGuy(false);
+                    oManager.RemoveBubbleGuy(false,false);
                     return false;
                 default:
                     break;
