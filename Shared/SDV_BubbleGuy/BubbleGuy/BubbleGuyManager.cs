@@ -32,12 +32,22 @@ namespace SDV_Speaker.Speaker
             sSpirteDirectory = sSpriteDir;
             if (Game1.IsMasterGame)
             {
+                //
+                //  the master game will handle the cleanups
+                //
                 helper.Events.GameLoop.Saving += GameLoop_Saving;
+                helper.Events.Multiplayer.PeerDisconnected += Multiplayer_PeerDisconnected;
             }
             helper.Events.Player.Warped += Player_Warped;
         }
 
-
+        private void Multiplayer_PeerDisconnected(object sender, PeerDisconnectedEventArgs e)
+        {
+            //
+            //  clean up any BubbleGuys left by a disconnected peer
+            //
+            RemoveBubbleGuy(true, false, BubbleGuyStatics.BubbleGuyPrefix + e.Peer.PlayerID.ToString());
+        }
 
         private void GameLoop_Saving(object sender, SavingEventArgs e)
         {
@@ -52,10 +62,30 @@ namespace SDV_Speaker.Speaker
         }
         public void RemoveBubbleGuy(bool bAllLocations, bool bIsSave)
         {
+            RemoveBubbleGuy(bAllLocations, bIsSave, BubbleGuyStatics.BubbleGuyName);
+        }
+        public void RemoveBubbleGuy(bool bAllLocations, bool bIsSave, string sBubbleGuyId)
+        {
 #if DEBUG
             oMonitor.Log($"removing BubbleGuy. name '{BubbleGuyStatics.BubbleGuyName}'", LogLevel.Info);
 #endif
-            if (bAllLocations) { }
+            if (bAllLocations) {
+                foreach (GameLocation gl in Game1.locations)
+                {
+                    List<NPC> lDelete = new List<NPC> { };
+                    foreach (NPC oNpc in gl.characters)
+                    {
+                        if (oNpc.name.Value==sBubbleGuyId)
+                        {
+                            lDelete.Add(oNpc);
+                        }
+                    }
+                    foreach (NPC oDel in lDelete)
+                    {
+                        gl.characters.Remove(oDel);
+                    }
+                }
+            }
             else
             {
                 if (Game1.IsMultiplayer && Game1.IsMasterGame && bIsSave)
@@ -81,7 +111,7 @@ namespace SDV_Speaker.Speaker
 #if DEBUG
                     oMonitor.Log($"Characters: {string.Join(", ", Game1.currentLocation.characters.Select(p => p.name))}",LogLevel.Info);
 #endif
-                    if (Game1.currentLocation.getCharacterFromName(BubbleGuyStatics.BubbleGuyName) is NPC oGuy)
+                    if (Game1.currentLocation.getCharacterFromName(sBubbleGuyId) is NPC oGuy)
                     {
                         Game1.currentLocation.characters.Remove(oGuy);
                     }
