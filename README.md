@@ -7,4 +7,4 @@ Used from the chat window:
 
 /think ???? - a thinking bubble will appear above the Farmer.
 
-/sb - clears the speech bubble
+/clear, /talk,/think - clears the speech bubble
