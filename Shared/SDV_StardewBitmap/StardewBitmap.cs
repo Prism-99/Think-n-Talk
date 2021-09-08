@@ -1,21 +1,46 @@
-﻿
+﻿//
+//  abstraction class to easily move graphics routines between
+//  Stardew Valley environments (pre 1.5.5 and 1.5.5 and beyond)
+//
+//  When compiling for SDV 1.5.4 and less the 'Classic' conditional flag
+//  is defined and all graphics are done with the System.Drawing library
+//  (for 32 bit code)
+//
+//  When compiling for SDV 1.5.5 and above 'SKIA' conditional flag
+//  is defined and all graphics are done with the SkiaSharp library
+//  (for 64 bit code)
+//
+//  When compiling for SDV 1.5.5 and above the conditional flag 'Common'
+//  is defined then the microsoft System.Drawing.Common library is used
+//  (for 64 bit code)
+//
+//  All mod code uses the class StardewBitmap for graphic routines
+//  allowing the changing of the conditional flags without requiring
+//  refactoring of any of the mod code
+//
+//  Graphic properties use XNA objects for parameters to allow seamless
+//  graphic library switching
+//
+//  Properties currently used
+//  
+//  Rectangle
+//  Color
 
 
 #if Classic||Common
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+#elif SKIA
+using SkiaSharp;
 #endif
+
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using System;
-
+using Netcode;
 using System.IO;
-#if SKIA
-using SkiaSharp;
-#endif
-using StardewModdingAPI;
 using xColor = Microsoft.Xna.Framework.Color;
 
 namespace StardewModHelpers
@@ -266,6 +291,24 @@ namespace StardewModHelpers
         {
             SourceImage = new Bitmap(ms);
         }
+        public StardewBitmap(NetArray<int, NetInt> oNetArray)
+        {
+            //
+            //  real fun hack to be able to pass bubble images
+            //  between players
+            //
+            int[] arBytes = new int[oNetArray.Count];
+            oNetArray.CopyTo(arBytes, 0);
+            byte[] result = new byte[arBytes.Length];
+            for (int iPtr = 0; iPtr < arBytes.Length; iPtr++)
+            {
+                result[iPtr] = (byte)arBytes[iPtr];
+            }
+
+            MemoryStream ms = new MemoryStream(result, false);
+            ms.Seek(0, SeekOrigin.Begin);
+            SourceImage = new Bitmap(ms);
+        }
         #endregion
 
         #region "public properties"
@@ -277,6 +320,23 @@ namespace StardewModHelpers
         public static StardewBitmap LoadFromContent(string sContentPath)
         {
             return StardewTextureLoader.LoadImageInUIThread(sContentPath);
+        }
+        public NetArray<int, NetInt> TextureNetArray()
+        {
+            //
+            //  probably not the most efficient method but it
+            //  provides the ability to passs textures between
+            //  multiplayer players
+            //
+            NetArray<int, NetInt> arReturn = new NetArray<int, NetInt>();
+            MemoryStream ms = new MemoryStream();
+            Texture().SaveAsPng(ms, SourceImage.Width, SourceImage.Height);
+            foreach (byte bBtyte in ms.ToArray())
+            {
+                arReturn.Add(bBtyte);
+            }
+
+            return arReturn;
         }
         public Texture2D Texture()
         {
@@ -330,6 +390,8 @@ namespace StardewModHelpers
         {
             MemoryStream memoryStream = new MemoryStream();
             SourceImage.Save(memoryStream, ImageFormat.Png);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
             return memoryStream;
         }
         public StardewBitmap GetBoundedImage(Rectangle rBounds)

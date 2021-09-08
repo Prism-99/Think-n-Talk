@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -27,19 +28,16 @@ namespace SDV_Speaker.Speaker
         public List<string> lTextLines = null;
         private NetLong _PlayerId = new NetLong();
         private bool _bThoughtLoaded = false;
+        //  use a NetArray to pass custom bubble images between players
+        private NetArray<int, NetInt> _BubbleImageData = new NetArray<int, NetInt>();
 
         public BubbleGuy()
         {
 #if StardewWeb
             SMAPI.ModDetails.Monitor.Log("BubbleGuy empty contructor called.", LogLevel.Info);
 #endif
-            base.forceOneTileWide.Value = true;
-            base.name.Value = BubbleGuyStatics.BubbleGuyName;
-            //_ModPath.Set("");
-            //Text = "Blank";
-
-            //base.NetFields.AddField(_Text);
-            //base.NetFields.AddField(_IsThought);
+            forceOneTileWide.Value = true;
+            name.Value = BubbleGuyStatics.BubbleGuyName;
         }
         public BubbleGuy(bool bIsThought, string sText, string sModDir) : this()
         {
@@ -58,7 +56,10 @@ namespace SDV_Speaker.Speaker
    SMAPI.ModDetails.Monitor.Log($"BubbleGuy initNetFields called. _BubbleText='{_BubbleText}'", LogLevel.Info);
 #endif
             base.initNetFields();
-            base.NetFields.AddFields(_BubbleText, _PlayerId, _IsThought);
+            //
+            //  add custom fields to NPC initNetFields
+            //
+            NetFields.AddFields(_BubbleText, _PlayerId, _IsThought, _BubbleImageData);
         }
         #region "Public Properties"
 
@@ -108,6 +109,11 @@ namespace SDV_Speaker.Speaker
 
         private void FormatText()
         {
+            //
+            //  crude text formatter
+            //  can be improved to use string widths instead
+            //  of character counts
+            //
             string[] arWords = (_BubbleText ?? "").Split(' ');
             int iCurLen = 0;
             List<string> lLineWords = new List<string> { };
@@ -134,10 +140,14 @@ namespace SDV_Speaker.Speaker
         }
         private void SetTexture()
         {
+            //
+            //  load the text for the selected Bubble type
+            //
             _bThoughtLoaded = _IsThought.Value;
 
             lock (oBackground)
             {
+
                 if (_IsThought.Value)
                 {
                     sbBackground = new StardewBitmap(Path.Combine(ModPath, "think_bubble.png"));
@@ -146,15 +156,24 @@ namespace SDV_Speaker.Speaker
                 {
                     sbBackground = new StardewBitmap(Path.Combine(ModPath, "talk_bubble.png"));
                 }
+
                 sbBackground.ResizeImage(300, 200);
-                //sbBackground.Save("bubbleguy.png");
+                if (Game1.IsMultiplayer)
+                {
+                    //
+                    //  store image data to send to other players
+                    //
+                    _BubbleImageData = sbBackground.TextureNetArray();
+                }
             }
         }
         public override void update(GameTime time, GameLocation location)
         {
             try
             {
-                //SMAPI.ModDetails.Monitor.Log("BG update called", LogLevel.Info);
+#if TRACE
+                SMAPI.ModDetails.Monitor.Log("BG update called", LogLevel.Info);
+#endif
                 //
                 //  used to keep the bubble above the NPC
                 //
@@ -163,31 +182,24 @@ namespace SDV_Speaker.Speaker
                 position.Set(new Vector2(newX, newY));
             }
             catch { }
-            //setTileLocation(Game1.player.getTileLocation());
-        }
-        public override void dayUpdate(int dayOfMonth)
-        {
-
         }
         public override void updateMovement(GameLocation location, GameTime time)
         {
             try
             {
-                //base.updateMovement(location, time);
+#if TRACE
+                SMAPI.ModDetails.Monitor.Log("BG updateMovement called", LogLevel.Info);
+#endif
                 float newX = Game1.getFarmer(_PlayerId.Value).position.X + 20;
                 float newY = Game1.getFarmer(_PlayerId.Value).position.Y - 10;
                 position.Set(new Vector2(newX, newY));
-                //setTileLocation(Game1.player.getTileLocation());
             }
             catch { }
 
         }
         public override bool CanSocialize => false;
 
-        public override bool canTalk()
-        {
-            return false;
-        }
+        public override bool canTalk() => true;
 
         public override void doEmote(int whichEmote, bool playSound, bool nextEventCommand = true)
         {
@@ -196,7 +208,6 @@ namespace SDV_Speaker.Speaker
 
         public override void draw(SpriteBatch b)
         {
-
             try
             {
                 Vector2 origin = new Vector2(8f, 8f);
@@ -204,10 +215,30 @@ namespace SDV_Speaker.Speaker
                 Vector2 txtPosition;
                 if (sbBackground == null || _bThoughtLoaded != _IsThought.Value)
                 {
+                    //
+                    //  this should only occur when the bubble is
+                    //  instantiated on a remote client.
+                    //  use remote image data synched via netfields
+                    //
 #if StardewWeb
                     SMAPI.ModDetails.Monitor.Log("Loading BG", LogLevel.Info);
 #endif
-                    SetTexture();
+                    try
+                    {
+                        //
+                        //  use custom hack to move background images
+                        //  between players
+                        //
+                        sbBackground = new StardewBitmap(_BubbleImageData);
+                        _bThoughtLoaded = _IsThought.Value;
+                    }
+                    catch
+                    {
+                        //
+                        //  if custom image fails, fallback to standard
+                        //
+                        SetTexture();
+                    }
                 }
                 if (_IsThought.Value)
                 {
@@ -218,26 +249,20 @@ namespace SDV_Speaker.Speaker
                     txtPosition = new Vector2(Position.X - 100, Position.Y - 265);
                 }
 
-                // float num = 1;
                 float num2 = Math.Max(0f, (float)((bgPosition.Y + 1) - 24) / 10000f) + (float)bgPosition.X * 1E-05f;
 
                 b.Draw(sbBackground.Texture(), Game1.GlobalToLocal(Game1.viewport, bgPosition), new Rectangle(0, 0, sbBackground.Width, sbBackground.Height), Color.White, 0f, origin, 1f, SpriteEffects.None, 0.99999f);
 
                 if (lTextLines == null)
                 {
-                    //SMAPI.ModDetails.Monitor.Log($"birthday_season: '{birthday_Season.Value}'", LogLevel.Info);
+                    //
+                    //  this is a remote client, get text
+                    //  manually setup text
+                    //
 #if StardewWeb
                     SMAPI.ModDetails.Monitor.Log($"_BubbleText: '{_BubbleText.Value}'", LogLevel.Info);
 #endif
                     FormatText();
-                    //if (modData.ContainsKey(_ModDataKey))
-                    //{
-                    //    Text = modData[_ModDataKey];
-                    //}
-                    //else
-                    //{
-                    //lTextLines = new List<string> { "empty" };
-                    //}
                 }
                 foreach (string line in lTextLines)
                 {

@@ -1,13 +1,25 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿//
+//  Used for retrieving game graphic assets
+//  Textures and sprite sheets
+//
+//  SDV 1.5.5 switched to use MonoGame which enforces thread access rules
+//  more tighly than the base XNA API
+//
+//  All graphic access must be done on the UI thread or they will fail
+//
+//  This class leverages existing SMAPI game hooks to ensure graphic
+//  loading is done in the required thread.
+//
+
+using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using System.Collections.Generic;
 using System.Threading;
 using StardewValley;
-//using StardewWeb.Utilities;
+
 
 namespace StardewModHelpers
 {
-
     internal static class StardewTextureLoader
     {
         private static List<string> lImagesToLoad = new List<string> { };
@@ -25,23 +37,35 @@ namespace StardewModHelpers
         public static StardewBitmap LoadSpriteSheet(string sSheetName)
         {
             StardewBitmap sbResult;
+            //
+            //  check if the request can be handled in the current
+            //  thread or needs to be queued to be handled in the UI
+            //  thread
+            //
             if (Thread.CurrentThread.ManagedThreadId == mainThreadId)
             {
                 sbResult = GetSpriteSheet(sSheetName);
             }
             else
             {
+                //
+                //  Queue up spritesheet request
+                //
                 lock (lSpriteSheetToLoad)
                 {
                     lSpriteSheetToLoad.Add(sSheetName);
                 }
                 oHelper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked_LoadSheet;
-
+                //
+                //  Wait for request to be handled in another thread
+                //
                 while (!dcSpriteSheets.ContainsKey(sSheetName))
                 {
-                    Thread.Sleep(200);
+                    Thread.Sleep(100);
                 }
-
+                //
+                //  Retrieve results
+                //
                 lock (dcSpriteSheets)
                 {
                     sbResult = dcSpriteSheets[sSheetName];
@@ -53,7 +77,12 @@ namespace StardewModHelpers
         }
         private static StardewBitmap GetSpriteSheet(string sSheetName)
         {
-           // StardewLogger.LogTrace("GetSpritesheet", $"sheetname '{sSheetName}'");
+#if TRACE
+            StardewLogger.LogTrace("GetSpritesheet", $"sheetname '{sSheetName}'");
+#endif
+            //
+            //  Fetch requested spritesheet
+            //
             switch (sSheetName)
             {
                 case "emoteSpriteSheet":
@@ -69,25 +98,39 @@ namespace StardewModHelpers
         public static StardewBitmap LoadImageInUIThread(string sImage)
         {
             StardewBitmap sbResult;
+            //
+            //  check if the request can be handled in the current
+            //  thread or needs to be queued to be handled in the UI
+            //  thread
+            //
             if (Thread.CurrentThread.ManagedThreadId == mainThreadId)
             {
                 sbResult = new StardewBitmap(oHelper.Content.Load<Texture2D>(sImage, ContentSource.GameContent));
             }
             else
             {
+                //
+                //  Queue up spritesheet request
+                //
                 lock (lImagesToLoad)
                 {
                     lImagesToLoad.Add(sImage);
+                    //
+                    // use SMAPI to add hook to fetch image in the UI thread
+                    //
+                    oHelper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked_LoadImage;
                 }
-                oHelper.Events.GameLoop.UpdateTicked += GameLoop_UpdateTicked_LoadImage;
-
+                //
+                //  Wait for request to be handled in another thread
+                //
                 while (!dcImages.ContainsKey(sImage))
                 {
                     Thread.Sleep(200);
                 }
-
-                //}
-                 lock (dcImages)
+                //
+                //  Retrieve results
+                //
+                lock (dcImages)
                 {
                     sbResult = dcImages[sImage];
                     dcImages.Remove(sImage);
@@ -99,19 +142,35 @@ namespace StardewModHelpers
 
         private static void GameLoop_UpdateTicked_LoadImage(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
         {
+            //
+            //  Get request image in UI thread
+            //
             lock (lImagesToLoad)
             {
                 foreach (string sImagePath in lImagesToLoad)
                 {
-                    Texture2D txImage = oHelper.Content.Load<Texture2D>(sImagePath, ContentSource.GameContent);
-                    lock (dcImages)
+                    try
                     {
-                        dcImages.Add(sImagePath, new StardewBitmap(txImage));
+                        Texture2D txImage = oHelper.Content.Load<Texture2D>(sImagePath, ContentSource.GameContent);
+                        lock (dcImages)
+                        {
+                            dcImages.Add(sImagePath, new StardewBitmap(txImage));
+                        }
+                    }
+                    catch
+                    {
+                        dcImages.Add(sImagePath, null);
                     }
                 }
+                //
+                //  clear requesst list
+                //
                 lImagesToLoad.Clear();
+                //
+                //  unhook event
+                //
+                oHelper.Events.GameLoop.UpdateTicked -= GameLoop_UpdateTicked_LoadImage;
             }
-            oHelper.Events.GameLoop.UpdateTicked -= GameLoop_UpdateTicked_LoadImage;
         }
         private static void GameLoop_UpdateTicked_LoadSheet(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
         {
@@ -119,15 +178,20 @@ namespace StardewModHelpers
             {
                 foreach (string sImagePath in lSpriteSheetToLoad)
                 {
- 
                     lock (dcSpriteSheets)
                     {
                         dcSpriteSheets.Add(sImagePath, GetSpriteSheet(sImagePath));
                     }
                 }
+                //
+                //  clear request list
+                //
                 lSpriteSheetToLoad.Clear();
+                //
+                //  unhook event
+                //
+                oHelper.Events.GameLoop.UpdateTicked -= GameLoop_UpdateTicked_LoadSheet;
             }
-            oHelper.Events.GameLoop.UpdateTicked -= GameLoop_UpdateTicked_LoadSheet;
         }
     }
 }
