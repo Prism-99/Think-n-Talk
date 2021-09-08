@@ -4,12 +4,8 @@ using StardewModdingAPI.Events;
 using StardewValley.Menus;
 using SDV_Speaker.Speaker;
 using System.IO;
-
-#if Classic
-using Harmony;
-#elif Current
 using HarmonyLib;
-#endif
+
 namespace SDV_Speaker.SMAPIInt
 {
     internal class ModEntry : Mod
@@ -23,11 +19,8 @@ namespace SDV_Speaker.SMAPIInt
             BubbleChat.Initialize(oManager);
             helper.Events.GameLoop.SaveLoaded += GameLoop_SaveLoaded;
 
-#if Current
-                Harmony harmony = new Harmony(ModManifest.UniqueID);
-#elif Classic
-            HarmonyInstance harmony = HarmonyInstance.Create(ModManifest.UniqueID);
-#endif
+            Harmony harmony = new Harmony(ModManifest.UniqueID);
+
             harmony.Patch(
           original: AccessTools.Method(typeof(ChatBox), "runCommand", new Type[] { typeof(string) }),
           prefix: new HarmonyMethod(typeof(BubbleChat), nameof(BubbleChat.RunCommand))
