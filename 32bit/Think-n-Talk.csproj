@@ -2,6 +2,9 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{BEA4B0C5-DED1-4774-A4D2-D6716FCDFF62}</ProjectGuid>
@@ -19,7 +22,11 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
+<<<<<<< Updated upstream:SDV_Speaker.csproj
     <DefineConstants>Classic</DefineConstants>
+=======
+    <DefineConstants>Classic,Standalone</DefineConstants>
+>>>>>>> Stashed changes:32bit/Think-n-Talk.csproj
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -90,6 +97,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+<<<<<<< Updated upstream:SDV_Speaker.csproj
     <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleChat.cs" />
     <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleGuy.cs" />
     <Compile Include="Shared\SDV_BubbleGuy\BubbleGuy\BubbleGuyManager.cs" />
@@ -108,11 +116,19 @@
     <Content Include="Sprites\think_bubble.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+=======
+    <Compile Include="Properties\AssemblyInfo.cs" />
+>>>>>>> Stashed changes:32bit/Think-n-Talk.csproj
   </ItemGroup>
   <ItemGroup>
     <None Include="manifest.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup />
+  <Import Project="..\Shared\SDV_BubbleGuy-Core\SDV_Speaker-Core.projitems" Label="Shared" />
+  <Import Project="..\Shared\SDV_StardewBitmap\SDV_StardewBitmap.projitems" Label="Shared" />
+  <Import Project="..\Shared\SDV_BubbleGuy\SDV_BubbleGuy.projitems" Label="Shared" />
+  <Import Project="..\Shared\SDV_Logger\SDV_Logger.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

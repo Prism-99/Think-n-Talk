@@ -1,0 +1,10 @@
+{
+  "Name": "Think-n-Talk",
+  "Author": "Prism 99",
+  "Version": "1.0.0",
+  "Description": "A utility that allows the Farmer to think and speak.",
+  "UniqueID": "prism99.thinkntalk",
+  "EntryDll": "SDV_Speaker.dll",
+  "MinimumApiVersion": "3.11.0",
+  "UpdateKeys": [ "Nexus:9546" ]
+}

@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Think-n-Talk-64bit": {
+      "commandName": "Executable",
+      "executablePath": "Q:\\StardewModdingAPI.exe",
+      "commandLineArgs": "--mods-path \"Mods (64bits)\""
+    }
+  }
+}
