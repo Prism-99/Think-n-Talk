@@ -19,13 +19,8 @@ namespace SDV_Speaker.Speaker
         public List<SpeakerItem> CurrentRecording;
         public Dictionary<string, List<SpeakerItem>> Recordings;
         public string DataDirectory;
-<<<<<<< Updated upstream:Shared/SDV_BubbleGuy/BubbleGuy/BubbleRecorder.cs
-        private readonly IModHelper oHelper;
-        public BubbleRecorder(string sDir, IModHelper helper)
-=======
         
         public BubbleRecorder(string sDir)
->>>>>>> Stashed changes:Shared/SDV_BubbleGuy-Core/BubbleGuy/BubbleRecorder.cs
         {
             DataDirectory = sDir;
             CurrentRecording = new List<SpeakerItem> { };
@@ -60,15 +55,9 @@ namespace SDV_Speaker.Speaker
                 }
             }
         }
-<<<<<<< Updated upstream:Shared/SDV_BubbleGuy/BubbleGuy/BubbleRecorder.cs
-        public void UpdateItemInCurrentRecording(SpeakerItem oOldValue,SpeakerItem oNewVal)
-        {
-            for(int iPtr = 0; iPtr < CurrentRecording.Count; iPtr++)
-=======
         public void UpdateItemInCurrentRecording(SpeakerItem oOldValue, SpeakerItem oNewVal)
         {
             for (int iPtr = 0; iPtr < CurrentRecording.Count; iPtr++)
->>>>>>> Stashed changes:Shared/SDV_BubbleGuy-Core/BubbleGuy/BubbleRecorder.cs
             {
                 if (CurrentRecording[iPtr].Equals(oOldValue))
                 {

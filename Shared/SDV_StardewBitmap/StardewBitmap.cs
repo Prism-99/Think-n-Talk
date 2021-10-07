@@ -42,10 +42,7 @@ using System;
 using Netcode;
 using System.IO;
 using xColor = Microsoft.Xna.Framework.Color;
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
 
 namespace StardewModHelpers
 {
@@ -64,11 +61,7 @@ namespace StardewModHelpers
     public class StardewBitmap
     {
         private SKBitmap SourceImage = null;
-<<<<<<< Updated upstream
-        private static IModHelper oHelper;
-=======
         private Texture2D txOutput = null;
->>>>>>> Stashed changes
 
         #region "Constructors"
         public StardewBitmap()
@@ -93,8 +86,6 @@ namespace StardewModHelpers
         public StardewBitmap(MemoryStream ms)
         {
             SourceImage = SKBitmap.Decode(ms);
-<<<<<<< Updated upstream
-=======
         }
         public StardewBitmap(NetArray<int, NetInt> oNetArray)
         {
@@ -113,105 +104,21 @@ namespace StardewModHelpers
             MemoryStream ms = new MemoryStream(result, false);
             ms.Seek(0, SeekOrigin.Begin);
             SourceImage = SKBitmap.Decode(ms);
->>>>>>> Stashed changes
         }
         #endregion
 
         public static StardewBitmap LoadFromContent(string sContentPath)
         {
-<<<<<<< Updated upstream
-            return StardewTextureLoader.LoadImageInUIThread(sContentPath);
-        }
-
-    #region "public properties"
-=======
             return StardewThreadSafeLoader.LoadImageInUIThread(sContentPath);
         }
 
         #region "public properties"
->>>>>>> Stashed changes
         public int Height { get { return SourceImage.Height; } }
         public int Width { get { return SourceImage.Width; } }
         #endregion
 
-<<<<<<< Updated upstream
-    #region "public methods"
-        public void DrawRectangle(xColor cLine, int iLeft, int iTop, int iWidth, int iHeight)
-        {
-            var canvas = new SKCanvas(SourceImage);
-            var rect = SKRect.Create(iLeft, iTop, iWidth, iHeight);
-            var paint = new SKPaint
-            {
-                Style = SKPaintStyle.Stroke,
-                Color = xColorToNative(cLine)
-            };
-
-            canvas.DrawRect(rect, paint);
-
-            canvas.Flush();
-        }
-        public void Save(string sFilename)
-        {
-            using (var image = SKImage.FromBitmap(SourceImage))
-            using (var data = image.Encode(SKEncodedImageFormat.Png, 80))
-            {
-                // save the data to a stream
-                using (var stream = File.OpenWrite(sFilename))
-                {
-                    data.SaveTo(stream);
-                }
-            }
-        }
-        public void FillRectangle(xColor cFill, int iLeft, int iTop, int iWidth, int iHeight)
-        {
-  
-            var canvas = new SKCanvas(SourceImage);
-            // the rectangle
-            var rect = SKRect.Create(iLeft, iTop, iWidth, iHeight);
-
-            // the brush
-            var paint = new SKPaint
-            {
-                Style = SKPaintStyle.Fill,
-                Color = xColorToNative(cFill)
-            };
-
-            // draw fill
-            canvas.DrawRect(rect, paint);
-
-            canvas.Flush();
-        }
-        public StardewBitmap GetBoundedImage(Rectangle rBounds)
-        {
-
-            StardewBitmap imPort = new StardewBitmap(rBounds.Width, rBounds.Height);
-            imPort.DrawImage(this, new Rectangle(0, 0, rBounds.Width, rBounds.Height), rBounds);
-
-            return imPort;
-        }
-        public StardewBitmap GetBoundedImage(int iWidth, int iHeight, int iImageIndex)
-        {
-            int iRow = 0;
-            int iCol = 0;
-
-            int iCols = SourceImage.Width / iWidth;
-
-            if (iImageIndex > -1)
-            {
-                iRow = iImageIndex / iCols;
-                iCol = iImageIndex % iCols;
-            }
-
-            StardewBitmap imPort = new StardewBitmap(iWidth, iHeight);
-            imPort.DrawImage(this, new Rectangle(0, 0, iWidth, iHeight), new Rectangle(iWidth * iCol, iRow * iHeight, iWidth, iHeight));
-
-            return imPort;
-        }
-        public Texture2D Texture()
-=======
         #region "public methods"
         public void DrawRectangle(xColor cLine, int iLeft, int iTop, int iWidth, int iHeight)
->>>>>>> Stashed changes
         {
             var canvas = new SKCanvas(SourceImage);
             var rect = SKRect.Create(iLeft, iTop, iWidth, iHeight);
@@ -240,19 +147,6 @@ namespace StardewModHelpers
                 arReturn.Add(bBtyte);
             }
 
-<<<<<<< Updated upstream
-        public void DrawImage(StardewBitmap image, Rectangle destination, Rectangle source)
-        {
-#if TRACE
-            StardewLogger.DumpObject("drawimage image", image);
-            StardewLogger.DumpObject("drawimage SourceImage", SourceImage);
-            StardewLogger.DumpObject("  d rectange", destination);
-            StardewLogger.DumpObject("  d skrectange", ConvertxRect( destination));
-            StardewLogger.DumpObject("  s rectange", source);
-            StardewLogger.DumpObject("  s krectange", ConvertxRect(source));
-
-#endif
-=======
             return arReturn;
         }
         public void Save(string sFilename)
@@ -270,7 +164,6 @@ namespace StardewModHelpers
         public void FillRectangle(xColor cFill, int iLeft, int iTop, int iWidth, int iHeight)
         {
 
->>>>>>> Stashed changes
             var canvas = new SKCanvas(SourceImage);
             // the rectangle
             var rect = SKRect.Create(iLeft, iTop, iWidth, iHeight);
@@ -285,10 +178,6 @@ namespace StardewModHelpers
             // draw fill
             canvas.DrawRect(rect, paint);
 
-<<<<<<< Updated upstream
-            canvas.DrawBitmap(image.SourceImage, ConvertxRect(source), ConvertxRect(destination));
-            canvas.Flush();
-=======
             canvas.Flush();
         }
         public StardewBitmap GetBoundedImage(Rectangle rBounds)
@@ -344,7 +233,6 @@ namespace StardewModHelpers
 
             canvas.DrawBitmap(image.SourceImage, ConvertxRect(source), ConvertxRect(destination));
             canvas.Flush();
->>>>>>> Stashed changes
             canvas.Save();
         }
         public void DrawString(string text, int x, int y)
@@ -371,13 +259,10 @@ namespace StardewModHelpers
             var memoryStream = new MemoryStream();
             encoded.AsStream().CopyTo(memoryStream);
             memoryStream.Seek(0, SeekOrigin.Begin);
-<<<<<<< Updated upstream
-=======
 
 #if LOG_DEBUG
             SDV_Logger.LogInfo("SourceStream", $"Stream length: {memoryStream.Length}");
 #endif
->>>>>>> Stashed changes
             return memoryStream;
         }
         public void FillArray(ref NetArray<int, NetInt> oArray)
@@ -396,17 +281,7 @@ namespace StardewModHelpers
         }
 #endregion
 
-<<<<<<< Updated upstream
-        public void ResizeImage(int width, int height)
-        {
-            SourceImage = SourceImage.Resize(new SKImageInfo(width, height), SKFilterQuality.Medium);
-        }
-    #endregion
-
-    #region "private methods"
-=======
             #region "private methods"
->>>>>>> Stashed changes
 
         private SKColor xColorToNative(xColor cColor)
         {
@@ -481,15 +356,6 @@ namespace StardewModHelpers
             {
                 result[iPtr] = (byte)arBytes[iPtr];
             }
-<<<<<<< Updated upstream
-
-            MemoryStream ms = new MemoryStream(result, false);
-            ms.Seek(0, SeekOrigin.Begin);
-            SourceImage = new Bitmap(ms);
-        }
-        #endregion
-=======
->>>>>>> Stashed changes
 
             MemoryStream ms = new MemoryStream(result, false);
             ms.Seek(0, SeekOrigin.Begin);
@@ -502,12 +368,6 @@ namespace StardewModHelpers
         public int Width { get { return SourceImage.Width; } }
             #endregion
 
-<<<<<<< Updated upstream
-        #region "public methods"
-        public static StardewBitmap LoadFromContent(string sContentPath)
-        {
-            return StardewTextureLoader.LoadImageInUIThread(sContentPath);
-=======
             #region "public methods"
         public static StardewBitmap LoadFromContent(string sContentPath)
         {
@@ -522,7 +382,6 @@ namespace StardewModHelpers
             {
                 oArray.Add(bBtyte);
             }
->>>>>>> Stashed changes
         }
         public NetArray<int, NetInt> TextureNetArray()
         {
@@ -552,11 +411,7 @@ namespace StardewModHelpers
 
         public void DrawImage(StardewBitmap image, Rectangle destination, Rectangle source)
         {
-<<<<<<< Updated upstream
-#if TRACE
-=======
 #if TRACE && StardewWeb
->>>>>>> Stashed changes
             StardewLogger.DumpObject("source rect", source);
             StardewLogger.DumpObject("dest rect", destination);
 #endif
@@ -650,15 +505,9 @@ namespace StardewModHelpers
         {
             SourceImage.Save(sFilename);
         }
-<<<<<<< Updated upstream
-        #endregion
-
-        #region "private methods"
-=======
             #endregion
 
             #region "private methods"
->>>>>>> Stashed changes
         private MemoryStream GetTextureStream(Texture2D tTexture)
         {
             MemoryStream stream = new MemoryStream();
@@ -726,11 +575,7 @@ namespace StardewModHelpers
             return tempBitmap;
         }
 
-<<<<<<< Updated upstream
-        #endregion
-=======
             #endregion
->>>>>>> Stashed changes
     }
 
 

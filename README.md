@@ -1,4 +1,4 @@
-# Stardew Valley Think-n-Talk
+# Stardew Valley Speaker
 Allows the Stardew Valley Farmer to talk
 
 Used from the chat window:
@@ -7,9 +7,4 @@ Used from the chat window:
 
 /think ???? - a thinking bubble will appear above the Farmer.
 
-/clear, /talk,/think - clears the speech bubble
-
-Requires SMAPI 3.11.X or later.
-
-
-In a multiplayer game, any players without this mod will not see the think or talk bubbles and errors will be thown by the game.  The game will function, but errors will appear for each new think or talk bubble.
+/sb - clears the speech bubble
