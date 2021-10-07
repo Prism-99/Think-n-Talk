@@ -1,10 +1,8 @@
-# Stardew Valley Speaker
+# Stardew Valley Think-n-Talk
 Allows the Stardew Valley Farmer to talk
 
 Used from the chat window:
 
-/talk ???? - a talking bubble will appear above of the Famer.
-
-/think ???? - a thinking bubble will appear above the Farmer.
-
-/sb - clears the speech bubble
+    type '/think text' into the chat box and the think bubble will appear above your Farmer.
+    type '/talk text' into the chat box and the talk bubble will appear above your Farmer.
+    type '/clear' or '/talk' or '/think' to remove your thought or talk box.
